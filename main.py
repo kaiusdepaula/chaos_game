@@ -1,6 +1,6 @@
 import pygame
-import random
-from time import sleep
+import game
+import button
 
 # Initialize Pygame
 pygame.init()
@@ -10,107 +10,67 @@ win_width, win_height = 512, 768
 win = pygame.display.set_mode((win_width, win_height))
 pygame.display.set_caption("Simulador de jogo do Caos")
 
-# Define the colors
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
+# Create main menu button instances
+start_button = button.button(x = win_width // 3, y = 2 * win_height // 6, width=200, height=50, text='Iniciar', font_size=32, font_style='Arial', bg_color=(255, 255, 255), text_color=(0, 0, 0))
+options_button = button.button(x = win_width // 3, y = 3 * win_height // 6, width=200, height=50, text='Opções', font_size=32, font_style='Arial', bg_color=(255, 255, 255), text_color=(0, 0, 0))
+exit_button = button.button(x = win_width // 3, y = 4 * win_height // 6, width=200, height=50, text='Sair', font_size=32, font_style='Arial', bg_color=(255, 255, 255), text_color=(0, 0, 0))
 
-# Define the radius of the dots to be drawn
-DOT_RADIUS = 1
+# Create options menu button instances
+return_button = button.button(x = win_width // 6, y = win_height * 4 // 5, width=350, height=50, text='Retornar ao menu inicial', font_size=25, font_style='Arial', bg_color=(255, 255, 255), text_color=(0, 0, 0))
+classic_button = button.button(x = win_width // 2 - 170, y = win_height // 2, width=75, height=50, text='1/2', font_size=32, font_style='Arial', bg_color=(255, 255, 255), text_color=(0, 0, 0))
+two_by_three_button = button.button(x = win_width // 2 + 100, y = win_height // 2, width=75, height=50, text='2/3', font_size=32, font_style='Arial', bg_color=(255, 255, 255), text_color=(0, 0, 0))
+phi_jump_button = button.button(x = win_width // 2 - 50, y = win_height // 2, width=120, height=50, text='phi', font_size=25, font_style='Arial', bg_color=(255, 255, 255), text_color=(0, 0, 0))
 
 # Define the Pygame clock
 clock = pygame.time.Clock()
 
-# Define a list to store the positions of the dots
-original_dots = []
+# Color variable
+BLACK = (0, 0, 0)
 
-# Define a function to draw a dot at a given position
-def draw_dot(position):
-    pygame.draw.circle(win, WHITE, position, DOT_RADIUS)
+# Main menu loop
+options = False
+g = game.Game(win_width, win_height)
 
-# Define a function to update the display
-def update_display():
 
-    win.fill(BLACK)
-    # Draw the dots on the display 
-    for position in original_dots:
-        draw_dot(position)
+while g.running:
+        win.fill(BLACK)
+        g.original_dots = []
+        if start_button.draw(win):
+            g.playing = True
+            g.game_loop()
+        if options_button.draw(win):
+            options = True
+        if exit_button.draw(win):
+            g.running = False
 
-    # Display the message on the screen
-    font = pygame.font.SysFont('arial', 20)
-    text = font.render("Aperte espaço para continuar.", True, WHITE)
-    text_width, text_height = text.get_size()
-    win.blit(text, ((win_width - text_width) // 2, 20))
+        while options:
+            win.fill(BLACK)
 
-    pygame.display.update()
+            if return_button.draw(win):
+                options = False
+            if classic_button.draw(win):
+                g.jump = 0.5
+                options = False
+            if two_by_three_button.draw(win):
+                g.jump = float(2 / 3)
+                options = False
+            if phi_jump_button.draw(win):
+                g.jump = float(1 / 1.618)
+                options = False
 
-# Define a function to handle button presses
-def handle_button_press():
-
-    win.fill(BLACK)
-    # Draw the dots on the display 
-    for position in original_dots:
-        draw_dot(position)
-
-    more_dots = []
-    drawing = True  # Set drawing to True before starting to draw dots
-    # Original drawing speed
-    speed = 1
-
-    # Draw a dot in the middle of two random dots
-    if len(original_dots) >= 2:
-        while drawing:
             for event in pygame.event.get():
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                    drawing = False  # Set drawing to False when spacebar is pressed
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
-                    speed = 0.005
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
-                    speed = 0.2
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
-                    speed = 1
-
-            first = True
-            if first:
-                more_dots.extend(original_dots)
-                first = False
-            # Choose two random dots from the list of dot positions
-            dot1 = random.sample(original_dots, 1)[0]
-            dot2 = random.sample(more_dots, 1)[0]
-            # Calculate the midpoint between the two dots
-            mid_x = (dot1[0] + dot2[0]) // 2
-            mid_y = (dot1[1] + dot2[1]) // 2
-            mid_point = (mid_x, mid_y)
-
-            # Draw a dot at the midpoint
-            draw_dot(mid_point)
-
-            # Add to list
-            more_dots.append(mid_point)
-
-            # Making sure all items are unique
-            more_dots = list(set(more_dots))
-
-            # Update display
+                if event.type == pygame.QUIT:
+                    g.running = False
+                    options = False
             pygame.display.update()
-            sleep(speed)
 
-# Main game loop
-running = True
-
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            # Add the position of the mouse click to the list of dot positions
-            original_dots.append(pygame.mouse.get_pos())
-            update_display()
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                handle_button_press()     
-
-    # Limit the frame rate
-    clock.tick(60)
+        # Event handler
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                g.running = False
+        # Limit the frame rate
+        clock.tick(60)
+        pygame.display.update()
 
 # Quit Pygame
 pygame.quit()
