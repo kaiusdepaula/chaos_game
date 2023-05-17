@@ -2,7 +2,7 @@ from random import sample
 import pygame
 
 class Game():
-    def __init__(self, width = 500, height = 500, jump = float(0.5), dot_radius = int(1)):
+    def __init__(self, width = 500, height = 500, dot_radius = int(1), dot_color = (0, 0, 0), game_bg_color = (255, 255, 255)):
         pygame.init()
         self.width, self.height = width, height
         self.running, self.playing, self.simulation = True, False, False
@@ -12,12 +12,11 @@ class Game():
         self.START_KEY, self.ESCAPE_KEY = False, False
 
         self.dot_radius = dot_radius
-        self.BLACK, self.WHITE = (0, 0, 0), (255, 255, 255)
+        self.dot_color = dot_color
+        self.game_bg_color = game_bg_color
 
         # Define a list to store the positions of the dots
         self.original_dots = []
-        # Define the jump parameter
-        self.jump = jump
 
     # Game loop
     def game_loop(self):
@@ -28,17 +27,20 @@ class Game():
             if self.START_KEY:
                 self.simulation = True
 
-            self.display.fill(self.BLACK)
-            self.draw_text("Simulador de jogo do Caos", 20, self.width // 2, 30)
-            self.draw_text("Aperte enter para continuar.", 20, self.width // 2, self.height - 20)
-            self.window.blit(self.display, (0, 0))
-
-            # Draw the dots on the display 
-            for position in self.original_dots:
-                self.draw_dot(position)
-            
             if self.simulation:
+                self.display.fill(self.game_bg_color)
+                self.window.blit(self.display, (0, 0))
                 self.original_dots = self.simulate()
+            else:
+
+                self.display.fill(self.game_bg_color)
+                self.draw_text("Simulador de jogo do Caos", 30, self.width // 2, 30)
+                self.draw_text("Aperte enter para continuar.", 20, self.width // 2, self.height - 20)
+                self.window.blit(self.display, (0, 0))
+
+                # Draw the dots on the display 
+                for position in self.original_dots:
+                    self.draw_dot(position)
             
             pygame.display.update()
             
@@ -65,14 +67,14 @@ class Game():
 
     def draw_text(self, text, size, x, y):
         font = pygame.font.Font(self.font_name, size)
-        text_surface = font.render(text, True, self.WHITE)
+        text_surface = font.render(text, True, self.dot_color)
         text_rect = text_surface.get_rect()
         text_rect.center = (x, y)
         self.display.blit(text_surface, text_rect)
 
     # Define a function to draw a dot at a given position
     def draw_dot(self, position):
-        pygame.draw.circle(self.window, self.WHITE, position, self.dot_radius)
+        pygame.draw.circle(self.window, self.dot_color, position, self.dot_radius)
 
     # Define a function to handle simulation
     def simulate(self):
@@ -95,8 +97,8 @@ class Game():
                 dot1 = sample(self.original_dots, 1)[0]
                 dot2 = sample(more_dots, 1)[0]
                 # Calculate dot between the two dots
-                dot_x = (dot1[0] + dot2[0]) * self.jump
-                dot_y = (dot1[1] + dot2[1]) * self.jump
+                dot_x = (dot1[0] + dot2[0]) // 2
+                dot_y = (dot1[1] + dot2[1]) // 2
                 dot_point = (dot_x, dot_y)
 
                 # Draw a dot at the midpoint
